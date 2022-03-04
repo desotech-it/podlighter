@@ -24,7 +24,7 @@ test:
 	@$(GOCMD) test
 
 __debug_bin:
-	$(DLVCMD) debug
+	@$(DLVCMD) debug
 
 .PHONY: debug
 debug: __debug_bin
