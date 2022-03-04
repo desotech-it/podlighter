@@ -1,4 +1,4 @@
-.DEFAULT_GOAL = podlighter
+.DEFAULT_GOAL = build
 
 REVISION = $(shell git rev-parse --short HEAD)
 
@@ -29,6 +29,6 @@ __debug_bin:
 .PHONY: debug
 debug: __debug_bin
 
-.PHONY: podlighter
-podlighter:
+.PHONY: build
+build:
 	$(GOCMD) build -ldflags '-s' -o podlighter
