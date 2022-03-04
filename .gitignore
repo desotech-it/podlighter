@@ -11,6 +11,9 @@
 # Debug binary, built with `dlv debug`
 __debug_bin
 
+# App binary
+podlighter
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
