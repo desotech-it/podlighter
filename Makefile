@@ -1,8 +1,10 @@
 .DEFAULT_GOAL = podlighter
 
 REVISION = $(shell git rev-parse --short HEAD)
-GOCMD = go
+
+DLVCMD = dlv
 DOCKERCMD = docker
+GOCMD = go
 
 .PHONY: tidy
 tidy:
@@ -25,5 +27,12 @@ test:
 run:
 	@$(GOCMD) run .
 
+__debug_bin:
+	$(DLVCMD) debug
+
+.PHONY: debug
+debug: __debug_bin
+
+.PHONY: podlighter
 podlighter:
 	$(GOCMD) build -ldflags '-s' -o podlighter
