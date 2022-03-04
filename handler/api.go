@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/desotech-it/podligther/api"
+	"github.com/desotech-it/podlighter/api"
 )
 
 type apiHandler struct {

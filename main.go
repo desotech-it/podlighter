@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/desotech-it/podligther/api"
-	"github.com/desotech-it/podligther/handler"
+	"github.com/desotech-it/podlighter/api"
+	"github.com/desotech-it/podlighter/handler"
 	"k8s.io/client-go/util/homedir"
 )
 

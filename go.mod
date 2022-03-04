@@ -1,4 +1,4 @@
-module github.com/desotech-it/podligther
+module github.com/desotech-it/podlighter
 
 go 1.17
 
