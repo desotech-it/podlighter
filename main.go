@@ -1,15 +1,19 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/desotech-it/podligther/api"
 )
 
 func main() {
-	apiHandler, _ := api.New()
+	client, err := api.NewInCluster()
+	if err != nil {
+		log.Fatalln(err)
+	}
 	handler := http.NewServeMux()
-	handler.Handle("/api/", http.StripPrefix("/api", apiHandler))
+	handler.Handle("/api/", http.StripPrefix("/api", api.WithClient(client)))
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: handler,
