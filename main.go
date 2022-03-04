@@ -1,22 +1,34 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/desotech-it/podligther/api"
+	"github.com/desotech-it/podligther/handler"
+	"k8s.io/client-go/util/homedir"
 )
 
 func main() {
-	client, err := api.NewInCluster()
+	var kubeconfig *string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
+
+	client, err := api.NewClient(*kubeconfig)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	handler := http.NewServeMux()
-	handler.Handle("/api/", http.StripPrefix("/api", api.WithClient(client)))
+	mux := http.NewServeMux()
+	mux.Handle("/api/", http.StripPrefix("/api", handler.ApiHandler(client)))
 	srv := http.Server{
 		Addr:    ":8080",
-		Handler: handler,
+		Handler: mux,
 	}
 
 	srv.ListenAndServe()

@@ -6,7 +6,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type Client interface {
@@ -17,8 +17,8 @@ type officialClient struct {
 	clientset *kubernetes.Clientset
 }
 
-func NewInCluster() (Client, error) {
-	config, err := rest.InClusterConfig()
+func NewClient(kubeconfigPath string) (Client, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
 		return nil, err
 	}
