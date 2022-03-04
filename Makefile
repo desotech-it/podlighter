@@ -23,10 +23,6 @@ docker:
 test:
 	@$(GOCMD) test
 
-.PHONY: run
-run:
-	@$(GOCMD) run .
-
 __debug_bin:
 	$(DLVCMD) debug
 
