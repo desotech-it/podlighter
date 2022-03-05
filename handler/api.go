@@ -19,7 +19,10 @@ func (a *apiHandler) handleRoutes() {
 }
 
 func (a *apiHandler) endpointsHandler(rw http.ResponseWriter, r *http.Request) {
-	if endpoints, err := a.client.Endpoints(r.Context(), "nginx", "podlighter"); err != nil {
+	query := r.URL.Query()
+	if name := query.Get("name"); len(name) == 0 {
+		http.Error(rw, "missing \"name\" parameter", http.StatusBadRequest)
+	} else if endpoints, err := a.client.Endpoints(r.Context(), name, namespaceFromValues(query)); err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	} else {
 		JSONHandler(endpoints).ServeHTTP(rw, r)
