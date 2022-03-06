@@ -21,7 +21,11 @@ docker:
 
 .PHONY: test
 test:
-	@$(GOCMD) test
+	@$(GOCMD) test ./...
+
+.PHONY: vtest
+vtest:
+	@$(GOCMD) test -v ./...
 
 .PHONY: debug
 debug:
