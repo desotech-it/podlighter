@@ -2,13 +2,13 @@ package http
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/desotech-it/podlighter/internal/util"
 )
 
 type restrictedHandler struct {
 	allowedMethods []string
+	allowValue     string
 	handler        http.Handler
 }
 
@@ -17,7 +17,7 @@ func (h *restrictedHandler) hasAllowedMethod(r *http.Request) bool {
 }
 
 func (h *restrictedHandler) writeAllowHeader(header http.Header) {
-	header.Set("Allow", strings.Join(h.allowedMethods, ", "))
+	header.Set("Allow", h.allowValue)
 }
 
 func (h *restrictedHandler) optionsHandler(rw http.ResponseWriter) {
