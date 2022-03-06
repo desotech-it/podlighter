@@ -3,8 +3,8 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
+	"time"
 )
 
 type jsonHandler struct {
@@ -17,9 +17,7 @@ func (h jsonHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	} else {
 		SetContentType(rw.Header(), MimeApplicationJSON)
-		rw.WriteHeader(http.StatusOK)
-		if _, err := buff.WriteTo(rw); err != nil {
-			log.Println(err)
-		}
+		content := bytes.NewReader(buff.Bytes())
+		http.ServeContent(rw, r, "", time.Unix(0, 0), content)
 	}
 }
