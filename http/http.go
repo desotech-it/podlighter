@@ -3,11 +3,11 @@ package http
 import "net/http"
 
 const (
-	MimeApplicationJSON = "application/json; charset=utf-8"
+	ContentTypeApplicationJSON = "application/json; charset=utf-8"
 )
 
-func SetContentType(header http.Header, mime string) {
-	header.Set("Content-Type", mime)
+func SetContentType(header http.Header, value string) {
+	header.Set("Content-Type", value)
 	header.Set("X-Content-Type-Options", "nosniff")
 }
 
