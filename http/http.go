@@ -27,3 +27,7 @@ func RestrictedHandler(allowedMethods []string, handler http.Handler) http.Handl
 		Handler:        handler,
 	}
 }
+
+func JSONHandler(v interface{}) http.Handler {
+	return &jsonHandler{v}
+}

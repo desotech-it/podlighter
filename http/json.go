@@ -23,7 +23,3 @@ func (h jsonHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
-func JSONHandler(v interface{}) http.Handler {
-	return &jsonHandler{v}
-}
