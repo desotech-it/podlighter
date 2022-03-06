@@ -17,7 +17,7 @@ func (h *restrictedHandler) hasAllowedMethod(r *http.Request) bool {
 }
 
 func (h *restrictedHandler) writeAllowHeader(header http.Header) {
-	header.Set(HeaderAllow, strings.Join(h.AllowedMethods, separatorComma))
+	header.Set("Allow", strings.Join(h.AllowedMethods, ", "))
 }
 
 func (h *restrictedHandler) optionsHandler(rw http.ResponseWriter) {
