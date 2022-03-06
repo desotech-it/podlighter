@@ -13,8 +13,8 @@ func SetContentType(header http.Header, value string) {
 
 func RestrictedHandler(allowedMethods []string, handler http.Handler) http.Handler {
 	return &restrictedHandler{
-		AllowedMethods: allowedMethods,
-		Handler:        handler,
+		allowedMethods: allowedMethods,
+		handler:        handler,
 	}
 }
 

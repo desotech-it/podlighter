@@ -8,16 +8,16 @@ import (
 )
 
 type restrictedHandler struct {
-	AllowedMethods []string
-	Handler        http.Handler
+	allowedMethods []string
+	handler        http.Handler
 }
 
 func (h *restrictedHandler) hasAllowedMethod(r *http.Request) bool {
-	return util.IndexOfString(h.AllowedMethods, r.Method) != -1
+	return util.IndexOfString(h.allowedMethods, r.Method) != -1
 }
 
 func (h *restrictedHandler) writeAllowHeader(header http.Header) {
-	header.Set("Allow", strings.Join(h.AllowedMethods, ", "))
+	header.Set("Allow", strings.Join(h.allowedMethods, ", "))
 }
 
 func (h *restrictedHandler) optionsHandler(rw http.ResponseWriter) {
@@ -38,6 +38,6 @@ func (h *restrictedHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodOptions {
 		h.optionsHandler(rw)
 	} else {
-		h.Handler.ServeHTTP(rw, r)
+		h.handler.ServeHTTP(rw, r)
 	}
 }
