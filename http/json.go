@@ -1,4 +1,4 @@
-package handler
+package http
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ func (h jsonHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(&buff).Encode(h.v); err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	} else {
-		writeContentTypeHeader(mimeApplicationJSON, rw.Header())
+		SetContentType(rw.Header(), MimeApplicationJSON)
 		rw.WriteHeader(http.StatusOK)
 		if _, err := buff.WriteTo(rw); err != nil {
 			log.Println(err)

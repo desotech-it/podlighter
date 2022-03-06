@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/desotech-it/podlighter/api"
-	"github.com/desotech-it/podlighter/handler"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -25,7 +24,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	mux := http.NewServeMux()
-	mux.Handle("/api/", http.StripPrefix("/api", handler.ApiHandler(client)))
+	mux.Handle("/api/", http.StripPrefix("/api", api.NewHandler(client)))
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
