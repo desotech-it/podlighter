@@ -38,7 +38,7 @@ func (a *apiHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 func handleClientError(err error, rw http.ResponseWriter) {
 	if statusError, ok := err.(*apierrors.StatusError); ok {
-		http.Error(rw, statusError.Error(), int(statusError.ErrStatus.Code))
+		http.Error(rw, statusError.ErrStatus.Message, int(statusError.ErrStatus.Code))
 	} else {
 		http.Error(rw, err.Error(), http.StatusBadGateway)
 	}
