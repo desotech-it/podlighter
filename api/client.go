@@ -9,6 +9,10 @@ import (
 )
 
 type Client interface {
+	EndpointsGetter
+}
+
+type EndpointsGetter interface {
 	Endpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error)
 }
 

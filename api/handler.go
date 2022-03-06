@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"regexp"
 
 	pkghttp "github.com/desotech-it/podlighter/http"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -13,23 +14,12 @@ type apiHandler struct {
 }
 
 func (a *apiHandler) handleRoutes() {
-	a.mux.Handle("/endpoints",
+	a.mux.Handle("/endpoints/",
 		pkghttp.RestrictedHandler(
 			[]string{http.MethodGet, http.MethodHead, http.MethodOptions},
-			http.HandlerFunc(a.endpointsHandler),
+			endpointsHandler{a.client},
 		),
 	)
-}
-
-func (a *apiHandler) endpointsHandler(rw http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-	if name := query.Get("name"); len(name) == 0 {
-		http.Error(rw, "missing \"name\" parameter", http.StatusBadRequest)
-	} else if endpoints, err := a.client.Endpoints(r.Context(), name, namespaceFromValues(query)); err != nil {
-		handleClientError(err, rw)
-	} else {
-		pkghttp.JSONHandler(endpoints).ServeHTTP(rw, r)
-	}
 }
 
 func (a *apiHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -41,5 +31,29 @@ func handleClientError(err error, rw http.ResponseWriter) {
 		http.Error(rw, statusError.ErrStatus.Message, int(statusError.ErrStatus.Code))
 	} else {
 		http.Error(rw, err.Error(), http.StatusBadGateway)
+	}
+}
+
+var endpointsRegexp = regexp.MustCompile("/endpoints/([^/]+)/?$")
+
+type endpointsHandler struct {
+	getter EndpointsGetter
+}
+
+func (h endpointsHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	indexes := endpointsRegexp.FindStringSubmatchIndex(path)
+	if len(indexes) < 4 {
+		http.NotFound(rw, r)
+	} else {
+		nameBeginIndex := indexes[2]
+		nameEndIndex := indexes[3]
+		name := path[nameBeginIndex:nameEndIndex]
+		query := r.URL.Query()
+		if endpoints, err := h.getter.Endpoints(r.Context(), name, namespaceFromValues(query)); err != nil {
+			handleClientError(err, rw)
+		} else {
+			pkghttp.JSONHandler(endpoints).ServeHTTP(rw, r)
+		}
 	}
 }
