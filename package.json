@@ -1,0 +1,17 @@
+{
+  "name": "podlighter",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/desotech-it/podlighter.git"
+  },
+  "author": "Desotech",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/desotech-it/podlighter/issues"
+  },
+  "homepage": "https://github.com/desotech-it/podlighter#readme",
+  "dependencies": {
+    "bootstrap": "^5.1.3"
+  }
+}

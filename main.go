@@ -25,6 +25,8 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", api.NewHandler(client)))
+	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("node_modules"))))
+	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("assets"))))
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,

@@ -19,3 +19,6 @@ podlighter
 
 # Go workspace file
 go.work
+
+# Node modules
+node_modules/
