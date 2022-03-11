@@ -31,7 +31,7 @@ func (a *apiHandler) handleRoutes() {
 	a.mux.Handle("/namespaces",
 		pkghttp.RestrictedHandler(
 			[]string{http.MethodGet, http.MethodHead, http.MethodOptions},
-			namespacesHandler{a.client},
+			namespacesListHandler{a.client},
 		),
 	)
 }
@@ -85,11 +85,11 @@ func (h endpointsListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request)
 	}
 }
 
-type namespacesHandler struct {
+type namespacesListHandler struct {
 	lister NamespaceLister
 }
 
-func (h namespacesHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (h namespacesListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if namespaces, err := h.lister.ListNamespaces(r.Context()); err != nil {
 		handleClientError(err, rw)
 	} else {
