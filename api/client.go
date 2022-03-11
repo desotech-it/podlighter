@@ -10,10 +10,15 @@ import (
 
 type Client interface {
 	EndpointsGetter
+	NamespaceLister
 }
 
 type EndpointsGetter interface {
 	GetEndpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error)
+}
+
+type NamespaceLister interface {
+	ListNamespaces(ctx context.Context) (*v1.NamespaceList, error)
 }
 
 type officialClient struct {
@@ -22,4 +27,8 @@ type officialClient struct {
 
 func (c *officialClient) GetEndpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error) {
 	return c.clientset.CoreV1().Endpoints(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (c *officialClient) ListNamespaces(ctx context.Context) (*v1.NamespaceList, error) {
+	return c.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 }
