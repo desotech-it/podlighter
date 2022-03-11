@@ -50,7 +50,7 @@ func (h endpointsHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		nameEndIndex := indexes[3]
 		name := path[nameBeginIndex:nameEndIndex]
 		query := r.URL.Query()
-		if endpoints, err := h.getter.Endpoints(r.Context(), name, namespaceFromValues(query)); err != nil {
+		if endpoints, err := h.getter.GetEndpoints(r.Context(), name, namespaceFromValues(query)); err != nil {
 			handleClientError(err, rw)
 		} else {
 			pkghttp.JSONHandler(endpoints).ServeHTTP(rw, r)

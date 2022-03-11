@@ -13,13 +13,13 @@ type Client interface {
 }
 
 type EndpointsGetter interface {
-	Endpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error)
+	GetEndpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error)
 }
 
 type officialClient struct {
 	clientset *kubernetes.Clientset
 }
 
-func (c *officialClient) Endpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error) {
+func (c *officialClient) GetEndpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error) {
 	return c.clientset.CoreV1().Endpoints(namespace).Get(ctx, name, metav1.GetOptions{})
 }
