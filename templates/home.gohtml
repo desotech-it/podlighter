@@ -1,0 +1,28 @@
+{{define "head"}}
+<title>{{.Title}}</title>
+{{end}}
+
+{{define "body"}}
+<header class="d-flex justify-content-evenly py-3 mb-3 border-bottom">
+	<form class="container-fluid">
+		<div class="row">
+			<div class="col">
+				<label for="namespace-select">Namespace</label>
+				<select id="namespace-select" class="form-select" aria-label="Namespace">
+				</select>
+			</div>
+			<div class="col">
+				<label for="service-select">Service</label>
+				<select id="service-select" class="form-select" aria-label="Service">
+				</select>
+			</div>
+		</div>
+	</form>
+</header>
+{{end}}
+
+{{define "scripts"}}
+<script src="/assets/js/home.js"></script>
+{{end}}
+
+{{template "base.gohtml" .}}

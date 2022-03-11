@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/desotech-it/podlighter/api"
+	"github.com/desotech-it/podlighter/frontend"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -27,6 +28,7 @@ func main() {
 	mux.Handle("/api/", http.StripPrefix("/api", api.NewHandler(client)))
 	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("node_modules"))))
 	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("assets"))))
+	mux.Handle("/", frontend.NewHandler())
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
