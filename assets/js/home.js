@@ -1,7 +1,14 @@
 'use strict';
 
 async function fetchJSON(url) {
-	return fetch(url).then(r => r.ok ? r.json() : new Error(`${r.status} ${r.statusText}`));
+	return fetch(url)
+	.then(response => {
+		if (response.ok) {
+			return response.json();
+		} else {
+			throw new Error(`${url} returned ${response.status} (${response.statusText})`);
+		}
+	});
 }
 
 function currentSelectOption(select) {
@@ -35,10 +42,12 @@ function fillSelectWithKubernetesList(select, list) {
 class App {
 	#namespaceSelect;
 	#endpointSelect;
+	#errorPlaceholder;
 
-	constructor(namespaceSelect, endpointSelect) {
+	constructor(namespaceSelect, endpointSelect, errorPlaceholder) {
 		this.#namespaceSelect = namespaceSelect;
 		this.#endpointSelect = endpointSelect;
+		this.#errorPlaceholder = errorPlaceholder;
 	}
 
 	addEventListenerToNamespaceSelect(type, listener, useCapture) {
@@ -57,6 +66,17 @@ class App {
 		fillSelectWithKubernetesList(this.#endpointSelect, list);
 	}
 
+	error(message) {
+		const wrapper = document.createElement('div');
+		wrapper.innerHTML = `
+		<div class="alert alert-danger alert-dismissible fade show" role="alert">
+			${message}
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+			</button>
+		</div>`;
+		this.#errorPlaceholder.append(wrapper);
+	}
+
 	get namespace() {
 		return currentSelectOption(this.#namespaceSelect);
 	}
@@ -67,18 +87,21 @@ async function updateNamespace(app) {
 	.then(namespaces => {
 		app.updateNamespaceSelect(namespaces);
 		return updateService(app.namespace, app);
-	});
+	})
+	.catch(err => app.error(`unable to retrieve namespaces: ${err.message}`));
 }
 
 async function updateService(namespace, app) {
 	return fetchJSON(`/api/endpoints?namespace=${namespace}`)
-	.then(services => app.updateServiceSelect(services));
+	.then(services => app.updateServiceSelect(services))
+	.catch(err => app.error(`unable to retrieve services: ${err.message}`));
 }
 
 window.onload = function() {
 	const ns = document.getElementById('namespace-select');
 	const svc = document.getElementById('service-select');
-	const app = new App(ns, svc);
+	const err = document.getElementById('error-placeholder');
+	const app = new App(ns, svc, err);
 	updateNamespace(app);
 	app.addEventListenerToNamespaceSelect('change', e => updateService(app.namespace, app));
 }
