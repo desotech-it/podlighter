@@ -1,25 +1,7 @@
 'use strict';
 
-async function fetchNamespaces() {
-	return fetch('/api/namespaces')
-	.then(response => {
-		if (!response.ok) {
-			return new Error('could not retrieve namespaces at this time');
-		} else {
-			return response.json();
-		}
-	});
-}
-
-async function fetchServices(namespace) {
-	return fetch(`/api/endpoints?namespace=${namespace}`)
-	.then(response => {
-		if (!response.ok) {
-			return new Error('could not retrieve endpoints at this time');
-		} else {
-			return response.json();
-		}
-	});
+async function fetchJSON(url) {
+	return fetch(url).then(r => r.ok ? r.json() : new Error(`${r.status} ${r.statusText}`));
 }
 
 function currentSelectOption(select) {
@@ -81,7 +63,7 @@ class App {
 }
 
 async function updateNamespace(app) {
-	return fetchNamespaces()
+	return fetchJSON('/api/namespaces')
 	.then(namespaces => {
 		app.updateNamespaceSelect(namespaces);
 		return updateService(app.namespace, app);
@@ -89,7 +71,8 @@ async function updateNamespace(app) {
 }
 
 async function updateService(namespace, app) {
-	return fetchServices(namespace).then(services => app.updateServiceSelect(services));
+	return fetchJSON(`/api/endpoints?namespace=${namespace}`)
+	.then(services => app.updateServiceSelect(services));
 }
 
 window.onload = function() {
