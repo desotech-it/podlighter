@@ -1,37 +1,39 @@
 'use strict';
 
-function getNamespaceSelect() {
-	return document.getElementById('namespace-select');
-}
-
-function getServiceSelect() {
-	return document.getElementById('service-select');
-}
-
 async function fetchNamespaces() {
-	return await fetch('/api/namespaces')
-		.then(response => {
-			if (!response.ok) {
-				return new Error('could not retrieve namespaces at this time');
-			} else {
-				return response.json();
-			}
-		})
+	return fetch('/api/namespaces')
+	.then(response => {
+		if (!response.ok) {
+			return new Error('could not retrieve namespaces at this time');
+		} else {
+			return response.json();
+		}
+	});
 }
 
 async function fetchServices(namespace) {
-	return await fetch(`/api/endpoints?namespace=${namespace}`)
-		.then(response => {
-			if (!response.ok) {
-				return new Error('could not retrieve endpoints at this time');
-			} else {
-				return response.json();
-			}
-		})
+	return fetch(`/api/endpoints?namespace=${namespace}`)
+	.then(response => {
+		if (!response.ok) {
+			return new Error('could not retrieve endpoints at this time');
+		} else {
+			return response.json();
+		}
+	});
+}
+
+function currentSelectOption(select) {
+	return select.options[select.selectedIndex].value;
+}
+
+function clearSelect(select) {
+	const range = document.createRange();
+	range.selectNodeContents(select);
+	range.deleteContents();
 }
 
 function fillSelect(select, items) {
-	clearOptions(select);
+	clearSelect(select);
 	if (items.length > 0) {
 		items.forEach(element => {
 			const option = document.createElement('option');
@@ -44,45 +46,56 @@ function fillSelect(select, items) {
 	}
 }
 
-function currentOption(select) {
-	return select.options[select.selectedIndex].value
+function fillSelectWithKubernetesList(select, list) {
+	fillSelect(select, list.items.map(item => item.metadata.name));
 }
 
-function clearOptions(select) {
-	const range = document.createRange();
-	range.selectNodeContents(select);
-	range.deleteContents();
+class App {
+	#namespaceSelect;
+	#endpointSelect;
+
+	constructor(namespaceSelect, endpointSelect) {
+		this.#namespaceSelect = namespaceSelect;
+		this.#endpointSelect = endpointSelect;
+	}
+
+	addEventListenerToNamespaceSelect(type, listener, useCapture) {
+		this.#namespaceSelect.addEventListener(type, listener, useCapture);
+	}
+
+	addEventListenerToServiceSelect(type, listener, useCapture) {
+		this.#endpointSelect.addEventListener(type, listener, useCapture);
+	}
+
+	updateNamespaceSelect(list) {
+		fillSelectWithKubernetesList(this.#namespaceSelect, list);
+	}
+
+	updateServiceSelect(list) {
+		fillSelectWithKubernetesList(this.#endpointSelect, list);
+	}
+
+	get namespace() {
+		return currentSelectOption(this.#namespaceSelect);
+	}
 }
 
-async function updateServiceSelect(namespace) {
-	const service_select = getServiceSelect();
-	return fetchServices(namespace)
-		.then(services => {
-			fillSelect(service_select, services.items.map(item => item.metadata.name));
-		});
-}
-
-async function updateNamespaceSelect() {
-	const namespace_select = getNamespaceSelect();
+async function updateNamespace(app) {
 	return fetchNamespaces()
-		.then(namespaces => {
-			fillSelect(namespace_select, namespaces.items.map(item => item.metadata.name));
-			const opt = currentOption(namespace_select);
-			return updateServiceSelect(opt);
-		});
-}
-
-function addListeners() {
-	const namespace_select = getNamespaceSelect();
-	namespace_select.addEventListener('change', event => {
-		const opt = currentOption(event.target);
-		updateServiceSelect(opt);
+	.then(namespaces => {
+		app.updateNamespaceSelect(namespaces);
+		return updateService(app.namespace, app);
 	});
 }
 
-function init() {
-	updateNamespaceSelect();
-	addListeners();
+async function updateService(namespace, app) {
+	return fetchServices(namespace).then(services => app.updateServiceSelect(services));
 }
 
-window.onload = init;
+window.onload = function() {
+	const ns = document.getElementById('namespace-select');
+	const svc = document.getElementById('service-select');
+	const app = new App(ns, svc);
+	updateNamespace(app);
+	app.addEventListenerToNamespaceSelect('change', e => updateService(app.namespace, app));
+}
