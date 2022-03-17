@@ -118,15 +118,15 @@ class Graph {
 class App {
 	#namespaceSelect;
 	#endpointSelect;
-	#errorPlaceholder;
+	#alertPlaceholder;
 	#graph;
 	#namespaceList;
 	#endpointList;
 
-	constructor(namespaceSelect, endpointSelect, errorPlaceholder, graph) {
+	constructor(namespaceSelect, endpointSelect, alertPlaceholder, graph) {
 		this.#namespaceSelect = namespaceSelect;
 		this.#endpointSelect = endpointSelect;
-		this.#errorPlaceholder = errorPlaceholder;
+		this.#alertPlaceholder = alertPlaceholder;
 		this.#graph = graph;
 	}
 
@@ -154,14 +154,22 @@ class App {
 	}
 
 	error(message) {
+		this.#alert(message, 'danger');
+	}
+
+	warning(message) {
+		this.#alert(message, 'warning');
+	}
+
+	#alert(message, type) {
 		const wrapper = document.createElement('div');
 		wrapper.innerHTML = `
-		<div class="alert alert-danger alert-dismissible fade show" role="alert">
+		<div class="alert alert-${type} alert-dismissible fade show" role="alert">
 			${message}
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
 			</button>
 		</div>`;
-		this.#errorPlaceholder.append(wrapper);
+		this.#alertPlaceholder.append(wrapper);
 	}
 
 	get namespace() {
@@ -206,7 +214,7 @@ async function fetchServices(namespace) {
 window.onload = function() {
 	const ns = document.getElementById('namespace-select');
 	const svc = document.getElementById('service-select');
-	const err = document.getElementById('error-placeholder');
+	const err = document.getElementById('alert-placeholder');
 
 	const graphContainer = document.getElementById('cy');
 	const graph = new Graph(graphContainer);
