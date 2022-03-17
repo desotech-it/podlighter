@@ -147,10 +147,17 @@ class App {
 	}
 
 	updateGraph() {
-		const service = this.#endpointList.items.find(item => item.metadata.name === this.service);
-		if (service) {
-			this.#graph.setService(service);
+		const selectedService = this.service;
+		const service = this.#endpointList.items.find(item => item.metadata.name === selectedService);
+		if (!service) {
+			this.error(`${selectedService} could not be found`);
+			return;
 		}
+		if (!('subsets' in service)) {
+			this.warning(`${selectedService} has no endpoints to show`);
+			return;
+		}
+		this.#graph.setService(service);
 	}
 
 	error(message) {
