@@ -147,7 +147,7 @@ class App {
 	}
 
 	updateGraph() {
-		const service = this.#endpointList.items.find(item => item.metadata.name == this.service);
+		const service = this.#endpointList.items.find(item => item.metadata.name === this.service);
 		if (service) {
 			this.#graph.setService(service);
 		}
