@@ -39,6 +39,70 @@ function fillSelectWithKubernetesList(select, list) {
 	fillSelect(select, list.items.map(item => item.metadata.name));
 }
 
+class Graph {
+	#cy;
+	#nodes;
+
+	constructor(container) {
+		const cy = cytoscape({
+			container: container,
+			// elements: {
+			// 	nodes: [
+			// 		{
+			// 			data: { id: 'svc' }
+			// 		},
+			// 		{
+			// 			data: { id: 'endpointA' }
+			// 		},
+			// 		{
+			// 			data: { id: 'endpointB' }
+			// 		}
+			// 	],
+			// 	edges: [
+			// 		{
+			// 			data: { id: 'a', source: 'svc', target: 'endpointA' }
+			// 		},
+			// 		{
+			// 			data: { id: 'b', source: 'svc', target: 'endpointB' }
+			// 		}
+			// 	]
+			// },
+			layout: {
+				name: 'circle',
+			},
+			style: [
+				{
+					selector: 'node',
+					style: {
+						'label': 'data(id)'
+					}
+				},
+				{
+					selector: 'edge',
+					style: {
+						'label': 'data(id)'
+					}
+				}
+			]
+		});
+		this.#cy = cy;
+		this.#nodes = cy.collection();
+	}
+
+	setService(service) {
+		const node = {
+			group: 'nodes',
+			data: {
+				id: service,
+				weight: 75
+			},
+			position: { x: 200, y: 200 }
+		};
+		this.#nodes.remove();
+		this.#nodes = this.#cy.add(node);
+	}
+}
+
 class App {
 	#namespaceSelect;
 	#endpointSelect;
@@ -80,28 +144,55 @@ class App {
 	get namespace() {
 		return currentSelectOption(this.#namespaceSelect);
 	}
+
+	get service() {
+		return currentSelectOption(this.#endpointSelect);
+	}
 }
 
-async function updateNamespace(app) {
-	return fetchJSON('/api/namespaces')
-	.then(namespaces => {
-		app.updateNamespaceSelect(namespaces);
-		return updateService(app.namespace, app);
-	})
-	.catch(err => app.error(`unable to retrieve namespaces: ${err.message}`));
+async function apiGet(url) {
+	return fetchJSON(url).catch(e => { throw new Error(`GET ${url} failed`, { cause: e }); });
 }
 
-async function updateService(namespace, app) {
-	return fetchJSON(`/api/endpoints?namespace=${namespace}`)
-	.then(services => app.updateServiceSelect(services))
-	.catch(err => app.error(`unable to retrieve services: ${err.message}`));
+async function fetchNamespaces() {
+	return apiGet('/api/namespaces');
+}
+
+async function fetchServices(namespace) {
+	return apiGet(`/api/endpoints?namespace=${namespace}`);
 }
 
 window.onload = function() {
 	const ns = document.getElementById('namespace-select');
 	const svc = document.getElementById('service-select');
 	const err = document.getElementById('error-placeholder');
+
+	const graphContainer = document.getElementById('cy');
+	const graph = new Graph(graphContainer);
+
 	const app = new App(ns, svc, err);
-	updateNamespace(app);
-	app.addEventListenerToNamespaceSelect('change', e => updateService(app.namespace, app));
+
+	const updateGraph = services => {
+		graph.setService(services);
+	};
+
+	const updateNamespace = async () => {
+		return fetchNamespaces().then(namespaces => app.updateNamespaceSelect(namespaces));
+	};
+
+	const updateServices = async () => {
+		return fetchServices(app.namespace)
+		.then(services => {
+			app.updateServiceSelect(services);
+			// updateGraph(services);
+		});
+	};
+
+	const showError = e => {
+		app.error('cause' in e ? `${e.message}: ${e.cause.message}` : e.message);
+	};
+
+	updateNamespace().then(updateServices).catch(showError);
+
+	app.addEventListenerToNamespaceSelect('change', () => updateServices().catch(showError));
 }

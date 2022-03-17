@@ -12,6 +12,7 @@
   },
   "homepage": "https://github.com/desotech-it/podlighter#readme",
   "dependencies": {
-    "bootstrap": "^5.1.3"
+    "bootstrap": "^5.1.3",
+    "cytoscape": "^3.21.0"
   }
 }
