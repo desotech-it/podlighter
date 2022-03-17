@@ -46,30 +46,6 @@ class Graph {
 	constructor(container) {
 		const cy = cytoscape({
 			container: container,
-			// elements: {
-			// 	nodes: [
-			// 		{
-			// 			data: { id: 'svc' }
-			// 		},
-			// 		{
-			// 			data: { id: 'endpointA' }
-			// 		},
-			// 		{
-			// 			data: { id: 'endpointB' }
-			// 		}
-			// 	],
-			// 	edges: [
-			// 		{
-			// 			data: { id: 'a', source: 'svc', target: 'endpointA' }
-			// 		},
-			// 		{
-			// 			data: { id: 'b', source: 'svc', target: 'endpointB' }
-			// 		}
-			// 	]
-			// },
-			layout: {
-				name: 'circle',
-			},
 			style: [
 				{
 					selector: 'node',
@@ -80,7 +56,7 @@ class Graph {
 				{
 					selector: 'edge',
 					style: {
-						'label': 'data(id)'
+						'label': ele => ele.scratch()._ports
 					}
 				}
 			]
@@ -90,16 +66,52 @@ class Graph {
 	}
 
 	setService(service) {
-		const node = {
+		const serviceName = service.metadata.name;
+		const serviceNode = {
 			group: 'nodes',
 			data: {
-				id: service,
+				id: serviceName,
 				weight: 75
 			},
-			position: { x: 200, y: 200 }
+			position: { x: innerWidth / 2, y: innerHeight / 2 }
 		};
+		const eles = new Array();
+		eles.push(serviceNode);
+		service.subsets.forEach(subset => {
+			const portList = subset.ports.map(item => `${item.port}/${item.protocol}`).join(',');
+			subset.addresses.forEach((address, index) => {
+				const node = {
+					group: 'nodes',
+					data: {
+						id: address.ip
+					},
+					position: { x: innerWidth / 2, y: innerHeight / 2 }
+				};
+				const edge = {
+					group: 'edges',
+					data: {
+						id: `${serviceName}-${address.ip}`,
+						source: serviceNode.data.id,
+						target: node.data.id,
+					},
+					scratch: {
+						_ports: portList
+					}
+				};
+				eles.push(node);
+				eles.push(edge);
+			});
+		});
 		this.#nodes.remove();
-		this.#nodes = this.#cy.add(node);
+		this.#nodes = this.#cy.add(eles);
+
+		const layout = this.#cy.layout({
+			name: 'circle',
+			animate: true,
+			animationDuration: 500,
+			startAngle: Math.PI / 2.0,
+		});
+		layout.run();
 	}
 }
 
@@ -107,11 +119,15 @@ class App {
 	#namespaceSelect;
 	#endpointSelect;
 	#errorPlaceholder;
+	#graph;
+	#namespaceList;
+	#endpointList;
 
-	constructor(namespaceSelect, endpointSelect, errorPlaceholder) {
+	constructor(namespaceSelect, endpointSelect, errorPlaceholder, graph) {
 		this.#namespaceSelect = namespaceSelect;
 		this.#endpointSelect = endpointSelect;
 		this.#errorPlaceholder = errorPlaceholder;
+		this.#graph = graph;
 	}
 
 	addEventListenerToNamespaceSelect(type, listener, useCapture) {
@@ -128,6 +144,13 @@ class App {
 
 	updateServiceSelect(list) {
 		fillSelectWithKubernetesList(this.#endpointSelect, list);
+	}
+
+	updateGraph() {
+		const service = this.#endpointList.items.find(item => item.metadata.name == this.service);
+		if (service) {
+			this.#graph.setService(service);
+		}
 	}
 
 	error(message) {
@@ -147,6 +170,24 @@ class App {
 
 	get service() {
 		return currentSelectOption(this.#endpointSelect);
+	}
+
+	get namespaces() {
+		return this.#namespaceList;
+	}
+
+	get services() {
+		return this.#endpointList;
+	}
+
+	set namespaces(namespaces) {
+		this.#namespaceList = namespaces;
+		fillSelectWithKubernetesList(this.#namespaceSelect, namespaces);
+	}
+
+	set services(services) {
+		this.#endpointList = services;
+		fillSelectWithKubernetesList(this.#endpointSelect, services);
 	}
 }
 
@@ -170,21 +211,17 @@ window.onload = function() {
 	const graphContainer = document.getElementById('cy');
 	const graph = new Graph(graphContainer);
 
-	const app = new App(ns, svc, err);
-
-	const updateGraph = services => {
-		graph.setService(services);
-	};
+	const app = new App(ns, svc, err, graph);
 
 	const updateNamespace = async () => {
-		return fetchNamespaces().then(namespaces => app.updateNamespaceSelect(namespaces));
+		return fetchNamespaces().then(namespaces => app.namespaces = namespaces);
 	};
 
 	const updateServices = async () => {
 		return fetchServices(app.namespace)
 		.then(services => {
-			app.updateServiceSelect(services);
-			// updateGraph(services);
+			app.services = services;
+			app.updateGraph();
 		});
 	};
 
@@ -195,4 +232,5 @@ window.onload = function() {
 	updateNamespace().then(updateServices).catch(showError);
 
 	app.addEventListenerToNamespaceSelect('change', () => updateServices().catch(showError));
+	app.addEventListenerToServiceSelect('change', () => app.updateGraph());
 }
