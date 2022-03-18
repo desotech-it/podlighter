@@ -153,14 +153,6 @@ class App {
 		this.#endpointSelect.addEventListener(type, listener, useCapture);
 	}
 
-	updateNamespaceSelect(list) {
-		fillSelectWithKubernetesList(this.#namespaceSelect, list);
-	}
-
-	updateServiceSelect(list) {
-		fillSelectWithKubernetesList(this.#endpointSelect, list);
-	}
-
 	updateGraph() {
 		const selectedService = this.service;
 		if (!selectedService) {
