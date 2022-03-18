@@ -73,7 +73,7 @@ func (h endpointsHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 type endpointsListHandler struct {
-	lister EndpointsLister
+	lister EndpointsGetter
 }
 
 func (h endpointsListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func (h endpointsListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request)
 }
 
 type namespacesListHandler struct {
-	lister NamespaceLister
+	lister NamespaceGetter
 }
 
 func (h namespacesListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {

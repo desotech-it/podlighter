@@ -10,19 +10,15 @@ import (
 
 type Client interface {
 	EndpointsGetter
-	EndpointsLister
-	NamespaceLister
+	NamespaceGetter
 }
 
 type EndpointsGetter interface {
 	GetEndpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error)
-}
-
-type EndpointsLister interface {
 	ListEndpoints(ctx context.Context, namespace string) (*v1.EndpointsList, error)
 }
 
-type NamespaceLister interface {
+type NamespaceGetter interface {
 	ListNamespaces(ctx context.Context) (*v1.NamespaceList, error)
 }
 
