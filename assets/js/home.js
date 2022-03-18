@@ -12,7 +12,8 @@ async function fetchJSON(url) {
 }
 
 function currentSelectOption(select) {
-	return select.options[select.selectedIndex].value;
+	const item = select.options[select.selectedIndex];
+	return item ? item.value : undefined;
 }
 
 function clearSelect(select) {
@@ -148,6 +149,9 @@ class App {
 
 	updateGraph() {
 		const selectedService = this.service;
+		if (!selectedService) {
+			return;
+		}
 		const service = this.#endpointList.items.find(item => item.metadata.name === selectedService);
 		if (!service) {
 			this.error(`${selectedService} could not be found`);
