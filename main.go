@@ -1,9 +1,9 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/desotech-it/podlighter/api"
@@ -12,15 +12,15 @@ import (
 )
 
 func main() {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	var kubeconfig string
+	kubeconfigPath := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	if _, err := os.Stat(kubeconfigPath); err != nil {
+		log.Println(err)
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		kubeconfig = kubeconfigPath
 	}
-	flag.Parse()
 
-	client, err := api.NewClient(*kubeconfig)
+	client, err := api.NewClient(kubeconfig)
 	if err != nil {
 		log.Fatalln(err)
 	}
