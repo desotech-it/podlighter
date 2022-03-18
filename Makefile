@@ -5,6 +5,7 @@ REVISION = $(shell git rev-parse --short HEAD)
 DLVCMD = dlv
 DOCKERCMD = docker
 GOCMD = go
+NPMCMD = npm
 
 .PHONY: tidy
 tidy:
@@ -34,3 +35,6 @@ debug:
 .PHONY: build
 build:
 	$(GOCMD) build -ldflags '-s' -o podlighter
+
+node_modules:
+	$(NPMCMD) install
