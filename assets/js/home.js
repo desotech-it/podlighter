@@ -51,13 +51,22 @@ class Graph {
 				{
 					selector: 'node',
 					style: {
-						'label': 'data(id)'
+						'label': ele => ele.scratch()._label,
+					}
+				},
+				{
+					selector: '.service',
+					style: {
+						'text-valign': 'bottom',
 					}
 				},
 				{
 					selector: 'edge',
 					style: {
-						'label': ele => ele.scratch()._ports
+						'curve-style': 'straight',
+						'target-arrow-shape': 'triangle',
+						'source-endpoint': 'outside-to-node-or-label',
+						'target-endpoint': 'outside-to-node-or-label',
 					}
 				}
 			]
@@ -74,19 +83,27 @@ class Graph {
 				id: serviceName,
 				weight: 75
 			},
+			scratch: {
+				_label: serviceName,
+			},
+			classes: [
+				'service',
+			],
 			position: { x: innerWidth / 2, y: innerHeight / 2 }
 		};
 		const eles = new Array();
 		eles.push(serviceNode);
 		service.subsets.forEach(subset => {
-			const portList = subset.ports.map(item => `${item.port}/${item.protocol}`).join(',');
 			subset.addresses.forEach(address => {
 				const node = {
 					group: 'nodes',
 					data: {
 						id: address.ip
 					},
-					position: { x: innerWidth / 2, y: innerHeight / 2 }
+					scratch: {
+						_label: subset.ports.map(item => `${address.ip}:${item.port}/${item.protocol}`).join(',')
+					},
+					position: { x: innerWidth / 2, y: innerHeight / 4 }
 				};
 				const edge = {
 					group: 'edges',
@@ -95,9 +112,6 @@ class Graph {
 						source: serviceNode.data.id,
 						target: node.data.id,
 					},
-					scratch: {
-						_ports: portList
-					}
 				};
 				eles.push(node);
 				eles.push(edge);
