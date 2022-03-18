@@ -8,6 +8,10 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
+var (
+	endpointsRegexp = regexp.MustCompile("/endpoints/([^/]+)/?$")
+)
+
 type apiHandler struct {
 	mux    *http.ServeMux
 	client Client
@@ -47,8 +51,6 @@ func handleClientError(err error, rw http.ResponseWriter) {
 		http.Error(rw, err.Error(), http.StatusBadGateway)
 	}
 }
-
-var endpointsRegexp = regexp.MustCompile("/endpoints/([^/]+)/?$")
 
 type endpointsHandler struct {
 	getter EndpointsGetter
