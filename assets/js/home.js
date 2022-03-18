@@ -79,7 +79,7 @@ class Graph {
 		eles.push(serviceNode);
 		service.subsets.forEach(subset => {
 			const portList = subset.ports.map(item => `${item.port}/${item.protocol}`).join(',');
-			subset.addresses.forEach((address, index) => {
+			subset.addresses.forEach(address => {
 				const node = {
 					group: 'nodes',
 					data: {
