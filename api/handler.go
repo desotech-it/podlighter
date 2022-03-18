@@ -10,6 +10,7 @@ import (
 
 var (
 	endpointsRegexp = regexp.MustCompile("/endpoints/([^/]+)/?$")
+	servicesRegexp  = regexp.MustCompile("/services/([^/]+)/?$")
 )
 
 type apiHandler struct {
@@ -18,6 +19,20 @@ type apiHandler struct {
 }
 
 func (a *apiHandler) handleRoutes() {
+	a.mux.Handle("/services/",
+		pkghttp.RestrictedHandler(
+			[]string{http.MethodGet, http.MethodHead, http.MethodOptions},
+			servicesHandler{a.client},
+		),
+	)
+
+	a.mux.Handle("/services",
+		pkghttp.RestrictedHandler(
+			[]string{http.MethodGet, http.MethodHead, http.MethodOptions},
+			servicesListHandler{a.client},
+		),
+	)
+
 	a.mux.Handle("/endpoints/",
 		pkghttp.RestrictedHandler(
 			[]string{http.MethodGet, http.MethodHead, http.MethodOptions},
@@ -49,6 +64,41 @@ func handleClientError(err error, rw http.ResponseWriter) {
 		http.Error(rw, statusError.ErrStatus.Message, int(statusError.ErrStatus.Code))
 	} else {
 		http.Error(rw, err.Error(), http.StatusBadGateway)
+	}
+}
+
+type servicesHandler struct {
+	getter ServiceGetter
+}
+
+func (h servicesHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	indexes := servicesRegexp.FindStringSubmatchIndex(path)
+	if len(indexes) < 4 {
+		http.NotFound(rw, r)
+	} else {
+		nameBeginIndex := indexes[2]
+		nameEndIndex := indexes[3]
+		name := path[nameBeginIndex:nameEndIndex]
+		query := r.URL.Query()
+		if endpoints, err := h.getter.GetServices(r.Context(), name, namespaceFromValues(query)); err != nil {
+			handleClientError(err, rw)
+		} else {
+			pkghttp.JSONHandler(endpoints).ServeHTTP(rw, r)
+		}
+	}
+}
+
+type servicesListHandler struct {
+	lister ServiceGetter
+}
+
+func (h servicesListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	namespace := namespaceFromValues(r.URL.Query())
+	if services, err := h.lister.ListServices(r.Context(), namespace); err != nil {
+		handleClientError(err, rw)
+	} else {
+		pkghttp.JSONHandler(services).ServeHTTP(rw, r)
 	}
 }
 

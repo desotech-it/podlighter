@@ -9,6 +9,7 @@ import (
 )
 
 type Client interface {
+	ServiceGetter
 	EndpointsGetter
 	NamespaceGetter
 }
@@ -16,6 +17,11 @@ type Client interface {
 type EndpointsGetter interface {
 	GetEndpoints(ctx context.Context, name, namespace string) (*v1.Endpoints, error)
 	ListEndpoints(ctx context.Context, namespace string) (*v1.EndpointsList, error)
+}
+
+type ServiceGetter interface {
+	GetServices(ctx context.Context, name, namespace string) (*v1.Service, error)
+	ListServices(ctx context.Context, namespace string) (*v1.ServiceList, error)
 }
 
 type NamespaceGetter interface {
@@ -32,6 +38,14 @@ func (c *officialClient) GetEndpoints(ctx context.Context, name, namespace strin
 
 func (c *officialClient) ListEndpoints(ctx context.Context, namespace string) (*v1.EndpointsList, error) {
 	return c.clientset.CoreV1().Endpoints(namespace).List(ctx, metav1.ListOptions{})
+}
+
+func (c *officialClient) GetServices(ctx context.Context, name, namespace string) (*v1.Service, error) {
+	return c.clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (c *officialClient) ListServices(ctx context.Context, namespace string) (*v1.ServiceList, error) {
+	return c.clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
 }
 
 func (c *officialClient) ListNamespaces(ctx context.Context) (*v1.NamespaceList, error) {
