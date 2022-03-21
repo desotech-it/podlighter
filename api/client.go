@@ -12,6 +12,7 @@ type Client interface {
 	ServiceGetter
 	EndpointsGetter
 	NamespaceGetter
+	NodeGetter
 }
 
 type EndpointsGetter interface {
@@ -26,6 +27,10 @@ type ServiceGetter interface {
 
 type NamespaceGetter interface {
 	ListNamespaces(ctx context.Context) (*v1.NamespaceList, error)
+}
+
+type NodeGetter interface {
+	ListNodes(ctx context.Context) (*v1.NodeList, error)
 }
 
 type officialClient struct {
@@ -50,4 +55,8 @@ func (c *officialClient) ListServices(ctx context.Context, namespace string) (*v
 
 func (c *officialClient) ListNamespaces(ctx context.Context) (*v1.NamespaceList, error) {
 	return c.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+}
+
+func (c *officialClient) ListNodes(ctx context.Context) (*v1.NodeList, error) {
+	return c.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 }

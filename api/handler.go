@@ -53,6 +53,13 @@ func (a *apiHandler) handleRoutes() {
 			namespacesListHandler{a.client},
 		),
 	)
+
+	a.mux.Handle("/nodes",
+		pkghttp.RestrictedHandler(
+			[]string{http.MethodGet, http.MethodHead, http.MethodOptions},
+			nodesListHandler{a.client},
+		),
+	)
 }
 
 func (a *apiHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -146,5 +153,17 @@ func (h namespacesListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request
 		handleClientError(err, rw)
 	} else {
 		pkghttp.JSONHandler(namespaces).ServeHTTP(rw, r)
+	}
+}
+
+type nodesListHandler struct {
+	lister NodeGetter
+}
+
+func (h nodesListHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	if nodes, err := h.lister.ListNodes(r.Context()); err != nil {
+		handleClientError(err, rw)
+	} else {
+		pkghttp.JSONHandler(nodes).ServeHTTP(rw, r)
 	}
 }
