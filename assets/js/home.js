@@ -52,6 +52,7 @@ class Graph {
 						'background-opacity': 0,
 						'width': nodeSize,
 						'height': nodeSize,
+						'font-family': 'SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace',
 					}
 				},
 				{
