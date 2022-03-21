@@ -11,11 +11,6 @@ async function fetchJSON(url) {
 	});
 }
 
-function currentSelectOption(select) {
-	const item = select.options[select.selectedIndex];
-	return item ? item.value : undefined;
-}
-
 function clearSelect(select) {
 	const range = document.createRange();
 	range.selectNodeContents(select);
@@ -75,9 +70,8 @@ class Graph {
 		this.#nodes = cy.collection();
 	}
 
-	update(endpoints) {
-		// In Kubernetes, the name for the Endpoints resource is equal to the service name
-		const serviceName = endpoints.metadata.name;
+	update(service, endpoints) {
+		const serviceName = service.metadata.name;
 		const serviceNode = {
 			group: 'nodes',
 			data: {
@@ -155,16 +149,16 @@ class App {
 	}
 
 	updateGraph() {
-		const currentService = this.service;
-		if (!currentService) {
+		const service = this.service;
+		if (!service) {
 			return;
 		}
 		const endpoints = this.endpoints;
 		if (!('subsets' in endpoints)) {
-			this.warning(`${currentService} has no endpoints to show`);
+			this.warning(`${service} has no endpoints to show`);
 			return;
 		}
-		this.#graph.update(endpoints);
+		this.#graph.update(service, endpoints);
 	}
 
 	error(message) {
@@ -187,11 +181,11 @@ class App {
 	}
 
 	get namespace() {
-		return currentSelectOption(this.#namespaceSelect);
+		return this.#namespaceList.items[this.#namespaceSelect.selectedIndex];
 	}
 
 	get service() {
-		return currentSelectOption(this.#serviceSelect);
+		return this.#serviceList.items[this.#serviceSelect.selectedIndex];
 	}
 
 	get namespaces() {
@@ -245,12 +239,12 @@ window.onload = function() {
 	};
 
 	const updateServices = async () => {
-		return fetchServices(app.namespace)
+		return fetchServices(app.namespace.metadata.name)
 		.then(services => app.services = services);
 	};
 
 	const updateEndpoints = async () => {
-		return fetchEndpoints(app.service, app.namespace)
+		return fetchEndpoints(app.service.metadata.name, app.namespace.metadata.name)
 		.then(endpoints => app.endpoints = endpoints);
 	};
 
