@@ -1,12 +1,25 @@
 'use strict';
 
+class PodlighterError extends Error {
+  constructor(...params) {
+    super(...params);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, PodlighterError);
+    }
+
+    this.name = 'PodlighterError';
+  }
+}
+
 async function fetchJSON(url) {
 	return fetch(url)
 	.then(response => {
 		if (response.ok) {
 			return response.json();
 		} else {
-			throw new Error(`${url} returned ${response.status} (${response.statusText})`);
+			throw new PodlighterError(`${url} returned ${response.status} (${response.statusText})`);
 		}
 	});
 }
@@ -230,7 +243,7 @@ class App {
 }
 
 async function apiGet(url) {
-	return fetchJSON(url).catch(e => { throw new Error(`GET ${url} failed`, { cause: e }); });
+	return fetchJSON(url).catch(e => { throw new PodlighterError(`GET ${url} failed`, { cause: e }); });
 }
 
 async function fetchNamespaces() {
@@ -255,32 +268,52 @@ window.onload = function() {
 
 	const app = new App(ns, svc, err, graph);
 
+	const emptyCheckbox = new PodlighterError(null);
+
 	const updateNamespaces = async () => {
 		return fetchNamespaces()
 		.then(namespaces => app.namespaces = namespaces);
 	};
 
 	const updateServices = async () => {
-		return fetchServices(app.namespace.metadata.name)
+		const namespace = app.namespace;
+		if (!namespace) {
+			throw emptyCheckbox;
+		}
+		return fetchServices(namespace.metadata.name)
 		.then(services => app.services = services);
 	};
 
 	const updateEndpoints = async () => {
-		return fetchEndpoints(app.service.metadata.name, app.namespace.metadata.name)
+		const service = app.service;
+		if (!service) {
+			throw emptyCheckbox;
+		}
+		const namespace = app.namespace;
+		if (!namespace) {
+			throw new emptyCheckbox;
+		}
+		return fetchEndpoints(service.metadata.name, namespace.metadata.name)
 		.then(endpoints => app.endpoints = endpoints);
 	};
 
 	const updateGraph = () => app.updateGraph();
 
 	const showError = e => {
-		app.error('cause' in e ? `${e.message}: ${e.cause.message}` : e.message);
+		if (e == emptyCheckbox) {
+			// intentionally left empty
+		} else if (e instanceof PodlighterError) {
+			app.error('cause' in e ? `${e.message}: ${e.cause.message}` : e.message);
+		} else {
+			throw e;
+		}
 	};
 
 	updateNamespaces()
 	.then(updateServices)
 	.then(updateEndpoints)
 	.then(updateGraph)
-	// .catch(showError);
+	.catch(showError);
 
 	app.addEventListenerToNamespaceSelect('change', () => {
 		updateServices()
