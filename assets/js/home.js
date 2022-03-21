@@ -40,6 +40,7 @@ class Graph {
 	#nodes;
 
 	constructor(container) {
+		const nodeSize = '100%';
 		const cy = cytoscape({
 			container: container,
 			style: [
@@ -47,6 +48,16 @@ class Graph {
 					selector: 'node',
 					style: {
 						'label': ele => ele.scratch()._label,
+						'background-fit': 'contain',
+						'background-opacity': 0,
+						'width': nodeSize,
+						'height': nodeSize,
+					}
+				},
+				{
+					selector: '.endpoint',
+					style: {
+						'background-image': '/assets/icons/kubernetes/svg/labeled/pod.svg',
 					}
 				},
 				{
@@ -54,6 +65,7 @@ class Graph {
 					style: {
 						'text-valign': 'bottom',
 						'text-wrap': 'wrap',
+						'background-image': '/assets/icons/kubernetes/svg/labeled/svc.svg',
 					}
 				},
 				{
@@ -104,6 +116,9 @@ class Graph {
 					scratch: {
 						_label: subset.ports.map(item => `${address.ip}:${item.port}/${item.protocol}`).join(',')
 					},
+					classes: [
+						'endpoint',
+					],
 					position: { x: innerWidth / 2, y: innerHeight / 4 }
 				};
 				const edge = {
