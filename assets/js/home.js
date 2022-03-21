@@ -53,6 +53,7 @@ class Graph {
 					selector: '.service',
 					style: {
 						'text-valign': 'bottom',
+						'text-wrap': 'wrap',
 					}
 				},
 				{
@@ -72,6 +73,10 @@ class Graph {
 
 	update(service, endpoints) {
 		const serviceName = service.metadata.name;
+		const serviceClusterIP = service.spec.clusterIP;
+		const servicePorts = service.spec.ports;
+		const serviceLabel = `(${serviceName})\n${serviceClusterIP}:`
+			+ servicePorts.map(item => `${item.port}/${item.protocol}`).join(',');
 		const serviceNode = {
 			group: 'nodes',
 			data: {
@@ -79,7 +84,8 @@ class Graph {
 				weight: 75
 			},
 			scratch: {
-				_label: serviceName,
+				_label: serviceLabel
+
 			},
 			classes: [
 				'service',
