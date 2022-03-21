@@ -75,8 +75,9 @@ class Graph {
 		this.#nodes = cy.collection();
 	}
 
-	setService(service) {
-		const serviceName = service.metadata.name;
+	update(endpoints) {
+		// In Kubernetes, the name for the Endpoints resource is equal to the service name
+		const serviceName = endpoints.metadata.name;
 		const serviceNode = {
 			group: 'nodes',
 			data: {
@@ -93,7 +94,7 @@ class Graph {
 		};
 		const eles = new Array();
 		eles.push(serviceNode);
-		service.subsets.forEach(subset => {
+		endpoints.subsets.forEach(subset => {
 			subset.addresses.forEach(address => {
 				const node = {
 					group: 'nodes',
@@ -132,15 +133,15 @@ class Graph {
 
 class App {
 	#namespaceSelect;
-	#endpointSelect;
+	#serviceSelect;
 	#alertPlaceholder;
 	#graph;
 	#namespaceList;
-	#endpointList;
+	#serviceList;
 
-	constructor(namespaceSelect, endpointSelect, alertPlaceholder, graph) {
+	constructor(namespaceSelect, serviceSelect, alertPlaceholder, graph) {
 		this.#namespaceSelect = namespaceSelect;
-		this.#endpointSelect = endpointSelect;
+		this.#serviceSelect = serviceSelect;
 		this.#alertPlaceholder = alertPlaceholder;
 		this.#graph = graph;
 	}
@@ -150,24 +151,20 @@ class App {
 	}
 
 	addEventListenerToServiceSelect(type, listener, useCapture) {
-		this.#endpointSelect.addEventListener(type, listener, useCapture);
+		this.#serviceSelect.addEventListener(type, listener, useCapture);
 	}
 
 	updateGraph() {
-		const selectedService = this.service;
-		if (!selectedService) {
+		const currentService = this.service;
+		if (!currentService) {
 			return;
 		}
-		const service = this.#endpointList.items.find(item => item.metadata.name === selectedService);
-		if (!service) {
-			this.error(`${selectedService} could not be found`);
+		const endpoints = this.endpoints;
+		if (!('subsets' in endpoints)) {
+			this.warning(`${currentService} has no endpoints to show`);
 			return;
 		}
-		if (!('subsets' in service)) {
-			this.warning(`${selectedService} has no endpoints to show`);
-			return;
-		}
-		this.#graph.setService(service);
+		this.#graph.update(endpoints);
 	}
 
 	error(message) {
@@ -194,7 +191,7 @@ class App {
 	}
 
 	get service() {
-		return currentSelectOption(this.#endpointSelect);
+		return currentSelectOption(this.#serviceSelect);
 	}
 
 	get namespaces() {
@@ -202,7 +199,7 @@ class App {
 	}
 
 	get services() {
-		return this.#endpointList;
+		return this.#serviceList;
 	}
 
 	set namespaces(namespaces) {
@@ -211,8 +208,8 @@ class App {
 	}
 
 	set services(services) {
-		this.#endpointList = services;
-		fillSelectWithKubernetesList(this.#endpointSelect, services);
+		this.#serviceList = services;
+		fillSelectWithKubernetesList(this.#serviceSelect, services);
 	}
 }
 
@@ -225,7 +222,11 @@ async function fetchNamespaces() {
 }
 
 async function fetchServices(namespace) {
-	return apiGet(`/api/endpoints?namespace=${namespace}`);
+	return apiGet(`/api/services?namespace=${namespace}`);
+}
+
+async function fetchEndpoints(name, namespace) {
+	return apiGet(`/api/endpoints/${name}?namespace=${namespace}`);
 }
 
 window.onload = function() {
@@ -238,24 +239,42 @@ window.onload = function() {
 
 	const app = new App(ns, svc, err, graph);
 
-	const updateNamespace = async () => {
-		return fetchNamespaces().then(namespaces => app.namespaces = namespaces);
+	const updateNamespaces = async () => {
+		return fetchNamespaces()
+		.then(namespaces => app.namespaces = namespaces);
 	};
 
 	const updateServices = async () => {
 		return fetchServices(app.namespace)
-		.then(services => {
-			app.services = services;
-			app.updateGraph();
-		});
+		.then(services => app.services = services);
 	};
+
+	const updateEndpoints = async () => {
+		return fetchEndpoints(app.service, app.namespace)
+		.then(endpoints => app.endpoints = endpoints);
+	};
+
+	const updateGraph = () => app.updateGraph();
 
 	const showError = e => {
 		app.error('cause' in e ? `${e.message}: ${e.cause.message}` : e.message);
 	};
 
-	updateNamespace().then(updateServices).catch(showError);
+	updateNamespaces()
+	.then(updateServices)
+	.then(updateEndpoints)
+	.then(updateGraph)
+	// .catch(showError);
 
-	app.addEventListenerToNamespaceSelect('change', () => updateServices().catch(showError));
-	app.addEventListenerToServiceSelect('change', () => app.updateGraph());
+	app.addEventListenerToNamespaceSelect('change', () => {
+		updateServices()
+		.then(updateEndpoints)
+		.then(updateGraph)
+		.catch(showError);
+	});
+	app.addEventListenerToServiceSelect('change', () => {
+		updateEndpoints()
+		.then(updateGraph)
+		.catch(showError);
+	});
 }
