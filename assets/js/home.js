@@ -53,7 +53,7 @@ class Graph {
 	#nodes;
 
 	constructor(container) {
-		const nodeSize = '100%';
+		const nodeSize = '75%';
 		const cy = cytoscape({
 			container: container,
 			style: [
@@ -66,6 +66,7 @@ class Graph {
 						'width': nodeSize,
 						'height': nodeSize,
 						'font-family': 'SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace',
+						'font-size': '0.8em',
 					}
 				},
 				{

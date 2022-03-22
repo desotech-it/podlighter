@@ -3,26 +3,40 @@
 {{end}}
 
 {{define "body"}}
-<header class="d-flex justify-content-evenly py-3 mb-3 border-bottom">
-	<form class="container-fluid">
-		<div class="row">
-			<div class="col">
-				<label for="namespace-select">Namespace</label>
-				<select id="namespace-select" class="form-select" aria-label="Namespace" disabled>
-				</select>
-			</div>
-			<div class="col">
-				<label for="service-select">Service</label>
-				<select id="service-select" class="form-select" aria-label="Service" disabled>
-				</select>
-			</div>
+<header class="container-fluid py-3 mb-3 border-bottom">
+	<form class="row">
+		<div class="col">
+			<label for="namespace-select">Namespace</label>
+			<select id="namespace-select" class="form-select" aria-label="Namespace" disabled>
+			</select>
+		</div>
+		<div class="col">
+			<label for="service-select">Service</label>
+			<select id="service-select" class="form-select" aria-label="Service" disabled>
+			</select>
 		</div>
 	</form>
 </header>
 
-<div id="alert-placeholder"></div>
+<main class="container-fluid flex-fill d-flex flex-column">
 
-<section id="cy" class="flex-fill"></section>
+<div class="row">
+	<div class="col">
+		<div id="alert-placeholder"></div>
+	</div>
+</div>
+
+<div class="row flex-grow-1">
+	<div class="col d-flex flex-column">
+		<div id="cy" class="flex-grow-1"></div>
+	</div>
+	<div class="col">
+	</div>
+	<div class="col">
+	</div>
+</div>
+
+</main>
 
 {{end}}
 
