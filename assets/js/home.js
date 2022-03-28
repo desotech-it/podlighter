@@ -51,11 +51,13 @@ function fillSelectWithKubernetesList(select, list) {
 class Graph {
 	#cy;
 	#nodes;
+	#container;
+	#service;
 
-	constructor(container) {
-		const nodeSize = '75%';
+	constructor(container, service) {
+		const nodeSize = '80px';
 		const cy = cytoscape({
-			container: container,
+			userPanningEnabled: false,
 			style: [
 				{
 					selector: 'node',
@@ -66,7 +68,7 @@ class Graph {
 						'width': nodeSize,
 						'height': nodeSize,
 						'font-family': 'SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace',
-						'font-size': '0.8em',
+						'font-size': '16px',
 					}
 				},
 				{
@@ -95,10 +97,9 @@ class Graph {
 			]
 		});
 		this.#cy = cy;
-		this.#nodes = cy.collection();
-	}
+		this.#container = container;
+		this.#service = service;
 
-	update(service, endpoints) {
 		const serviceName = service.metadata.name;
 		const serviceClusterIP = service.spec.clusterIP;
 		const servicePorts = service.spec.ports;
@@ -117,47 +118,52 @@ class Graph {
 			classes: [
 				'service',
 			],
-			position: { x: innerWidth / 2, y: innerHeight / 2 }
+			position: { x: 0, y: 0 }
 		};
-		const eles = new Array();
-		eles.push(serviceNode);
-		endpoints.subsets.forEach(subset => {
-			subset.addresses.forEach(address => {
-				const node = {
-					group: 'nodes',
-					data: {
-						id: address.ip
-					},
-					scratch: {
-						_label: subset.ports.map(item => `${address.ip}:${item.port}/${item.protocol}`).join(',')
-					},
-					classes: [
-						'endpoint',
-					],
-					position: { x: innerWidth / 2, y: innerHeight / 4 }
-				};
-				const edge = {
-					group: 'edges',
-					data: {
-						id: `${serviceName}-${address.ip}`,
-						source: serviceNode.data.id,
-						target: node.data.id,
-					},
-				};
-				eles.push(node);
-				eles.push(edge);
-			});
-		});
-		this.#nodes.remove();
-		this.#nodes = this.#cy.add(eles);
 
+		this.#nodes = cy.add(serviceNode);
+	}
+
+	mount() {
+		this.#cy.mount(this.#container);
 		const layout = this.#cy.layout({
 			name: 'circle',
 			animate: true,
 			animationDuration: 500,
-			startAngle: Math.PI / 2.0,
+			startAngle: 1 / 2 * Math.PI,
 		});
 		layout.run();
+	}
+
+	destroy() {
+		this.#cy.unmount();
+		this.#cy.destroy();
+	}
+
+	addAddress(address, ports) {
+		const node = {
+			group: 'nodes',
+			data: {
+				id: address.ip
+			},
+			scratch: {
+				_label: ports.map(item => `${address.ip}:${item.port}/${item.protocol}`).join(',')
+			},
+			classes: [
+				'endpoint',
+			],
+			position: {x: 0, y: 0}
+		};
+		const edge = {
+			group: 'edges',
+			data: {
+				id: `${this.#service.metadata.name}-${address.ip}`,
+				source: this.#service.metadata.name,
+				target: node.data.id,
+			},
+		};
+		this.#cy.add(node);
+		this.#cy.add(edge);
 	}
 }
 
@@ -165,15 +171,18 @@ class App {
 	#namespaceSelect;
 	#serviceSelect;
 	#alertPlaceholder;
-	#graph;
+	#nodeGrid;
 	#namespaceList;
 	#serviceList;
+	#nodeList;
+	#graphs;
 
-	constructor(namespaceSelect, serviceSelect, alertPlaceholder, graph) {
+	constructor(namespaceSelect, serviceSelect, alertPlaceholder, nodeGrid) {
 		this.#namespaceSelect = namespaceSelect;
 		this.#serviceSelect = serviceSelect;
 		this.#alertPlaceholder = alertPlaceholder;
-		this.#graph = graph;
+		this.#nodeGrid = nodeGrid;
+		this.#graphs = new Map();
 	}
 
 	addEventListenerToNamespaceSelect(type, listener, useCapture) {
@@ -194,7 +203,51 @@ class App {
 			this.warning(`${service} has no endpoints to show`);
 			return;
 		}
-		this.#graph.update(service, endpoints);
+
+		this.#graphs.forEach(graph => graph.destroy());
+
+		this.#graphs.clear();
+
+		clearSelect(this.#nodeGrid);
+
+		const items = this.#nodeList.items;
+
+		const columnClasses = ['border', 'border-2', 'border-secondary', 'position-relative', 'col'];
+		if (items.length > 1) {
+			columnClasses.push('col-xl-6');
+		}
+
+		items.forEach(node => {
+			const col = document.createElement('div');
+			col.classList.add(...columnClasses);
+			const badge = document.createElement('h5');
+			badge.innerHTML = `
+				<span class="badge bg-secondary rounded-pill position-absolute node-badge">
+					${node.metadata.name}
+				</span>`;
+			const graphContainer = document.createElement('div');
+			graphContainer.setAttribute('id', 'graph-' + node.metadata.name);
+			graphContainer.classList.add('graph-container');
+			col.appendChild(badge);
+			col.appendChild(graphContainer);
+			this.#nodeGrid.appendChild(col);
+			const graph = new Graph(graphContainer, service);
+			this.#graphs.set(node.metadata.name, graph);
+		});
+
+		endpoints.subsets.forEach(subset => {
+			const ports = subset.ports;
+			subset.addresses.forEach(address => {
+				const nodeName = address.nodeName;
+				if (!nodeName) return;
+				const graph = this.#graphs.get(nodeName);
+				graph.addAddress(address, ports);
+			});
+		});
+
+		this.#graphs.forEach(graph => {
+			graph.mount();
+		});
 	}
 
 	error(message) {
@@ -232,6 +285,10 @@ class App {
 		return this.#serviceList;
 	}
 
+	get nodes() {
+		return this.#nodeList;
+	}
+
 	set namespaces(namespaces) {
 		this.#namespaceList = namespaces;
 		fillSelectWithKubernetesList(this.#namespaceSelect, namespaces);
@@ -240,6 +297,10 @@ class App {
 	set services(services) {
 		this.#serviceList = services;
 		fillSelectWithKubernetesList(this.#serviceSelect, services);
+	}
+
+	set nodes(nodes) {
+		this.#nodeList = nodes;
 	}
 }
 
@@ -259,15 +320,17 @@ async function fetchEndpoints(name, namespace) {
 	return apiGet(`/api/endpoints/${name}?namespace=${namespace}`);
 }
 
+async function fetchNodes() {
+	return apiGet('/api/nodes');
+}
+
 window.onload = function() {
 	const ns = document.getElementById('namespace-select');
 	const svc = document.getElementById('service-select');
 	const err = document.getElementById('alert-placeholder');
+	const ng = document.getElementById('node-grid');
 
-	const graphContainer = document.getElementById('cy');
-	const graph = new Graph(graphContainer);
-
-	const app = new App(ns, svc, err, graph);
+	const app = new App(ns, svc, err, ng);
 
 	const emptyCheckbox = new PodlighterError(null);
 
@@ -295,13 +358,20 @@ window.onload = function() {
 			throw new emptyCheckbox;
 		}
 		return fetchEndpoints(service.metadata.name, namespace.metadata.name)
-		.then(endpoints => app.endpoints = endpoints);
+		.then(endpoints => {
+			app.endpoints = endpoints;
+		});
+	};
+
+	const updateNodes = async () => {
+		return fetchNodes()
+		.then(nodes => app.nodes = nodes);
 	};
 
 	const updateGraph = () => app.updateGraph();
 
 	const showError = e => {
-		if (e == emptyCheckbox) {
+		if (e === emptyCheckbox) {
 			// intentionally left empty
 		} else if (e instanceof PodlighterError) {
 			app.error('cause' in e ? `${e.message}: ${e.cause.message}` : e.message);
@@ -311,6 +381,7 @@ window.onload = function() {
 	};
 
 	updateNamespaces()
+	.then(updateNodes)
 	.then(updateServices)
 	.then(updateEndpoints)
 	.then(updateGraph)
