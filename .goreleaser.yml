@@ -1,0 +1,86 @@
+before:
+  hooks:
+    - go mod tidy
+    - make node_modules
+builds:
+- env:
+    - CGO_ENABLED=0
+  goos:
+    - linux
+    - darwin
+    - windows
+  goarch:
+    - amd64
+    - arm64
+  mod_timestamp: '{{ .CommitTimestamp }}'
+  flags:
+    - -trimpath
+  ldflags:
+    - -s -w
+  ignore:
+    - goos: windows
+      goarch: arm64
+archives:
+- id: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+  wrap_in_directory: '{{ .ProjectName }}'
+  files:
+    - LICENSE
+    - assets/*
+    - node_modules/*
+    - templates/*
+  format_overrides:
+    - goos: windows
+      format: zip
+dockers:
+  - image_templates:
+      - "r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-amd64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description={{ .ProjectName }}
+      - --label=org.opencontainers.image.url=https://github.com/desotech-it/{{ .ProjectName }}
+      - --label=org.opencontainers.image.source=https://github.com/desotech-it/{{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=MIT
+  - image_templates:
+      - "r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+    goarch: arm64
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/arm64/v8
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description={{ .ProjectName }}
+      - --label=org.opencontainers.image.url=https://github.com/desotech-it/{{ .ProjectName }}
+      - --label=org.opencontainers.image.source=https://github.com/desotech-it/{{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=MIT
+docker_manifests:
+  - name_template: r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-amd64
+      - r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-arm64v8
+  - name_template: r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:latest
+    image_templates:
+      - r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-amd64
+      - r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-arm64v8
+checksum:
+  name_template: checksums.txt
+snapshot:
+  name_template: '{{ .ProjectName }}-SNAPSHOPT-{{ .ShortCommit }}'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^src:'
+      - Merge pull request
+      - Merge branch
+      - go mod tidy
