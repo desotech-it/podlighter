@@ -15,3 +15,4 @@ COPY templates templates/
 COPY --from=node /usr/local/src/podlighter/node_modules node_modules/
 COPY --from=golang /usr/local/src/podlighter/podlighter /usr/local/bin/podlighter
 CMD ["podlighter"]
+EXPOSE 80
