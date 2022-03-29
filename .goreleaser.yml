@@ -36,6 +36,20 @@ dockers:
       - "r.deso.tech/{{ .ProjectName }}/{{ .ProjectName }}:{{ .Version }}-amd64"
     dockerfile: Dockerfile
     use: buildx
+    extra_files: &extra_files
+      - LICENSE
+      - Makefile
+      - api
+      - app
+      - assets
+      - frontend
+      - http
+      - internal
+      - templates
+      - go.mod
+      - go.sum
+      - package-lock.json
+      - package.json
     build_flag_templates:
       - --platform=linux/amd64
       - --label=org.opencontainers.image.title={{ .ProjectName }}
@@ -51,6 +65,7 @@ dockers:
     goarch: arm64
     dockerfile: Dockerfile
     use: buildx
+    extra_files: *extra_files
     build_flag_templates:
       - --platform=linux/arm64/v8
       - --label=org.opencontainers.image.title={{ .ProjectName }}
