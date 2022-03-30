@@ -200,7 +200,7 @@ class App {
 		}
 		const endpoints = this.endpoints;
 		if (!('subsets' in endpoints)) {
-			this.warning(`${service} has no endpoints to show`);
+			this.warning(`${service.metadata.name} has no endpoints to show`);
 			return;
 		}
 
