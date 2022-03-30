@@ -19,6 +19,7 @@ func (h frontendHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 func setRoutes(mux *http.ServeMux) {
 	mux.Handle("/home/", newHomeHandler())
+	mux.Handle("/", http.RedirectHandler("/home/", http.StatusFound))
 }
 
 func NewHandler() http.Handler {
