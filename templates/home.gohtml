@@ -6,9 +6,9 @@
 <header class="container-fluid py-3 mb-3 border-bottom">
 	<form class="row">
 		<div class="col">
-			<label for="namespace-select">Namespace</label>
-			<select id="namespace-select" class="form-select" aria-label="Namespace" disabled>
-			</select>
+			<!-- <label for="namespace-select">Namespace</label> -->
+			<!-- <select id="namespace-select" class="form-select" aria-label="Namespace" disabled> -->
+			<!-- </select> -->
 		</div>
 		<div class="col">
 			<label for="service-select">Service</label>
@@ -18,11 +18,19 @@
 	</form>
 </header>
 
-<main id="main" class="container-fluid flex-fill d-flex flex-column">
+<main id="main" class="flex-fill d-flex flex-column position-relative">
 
-<div class="container-fluid flex-fill position-relative">
-	<div id="alert-placeholder" class="container-fluid position-absolute top-0 start-0"></div>
-	<div id="node-grid" class="row overflow-auto mx-10"></div>
+<div id="alert-placeholder" class="container-fluid position-absolute top-0 start-0"></div>
+
+<div id="namespace-logo-container" class="position-absolute top-0 start-0">
+	<div class="position-relative">
+		<img id="namespace-logo" src="/assets/icons/kubernetes/svg/labeled/ns.svg" class="h-auto w-100"/>
+		<select id="namespace-select" class="kubernetes-select form-select d-inline w-auto position-absolute top-50 translate-middle-y" aria-label="Namespace" disabled></select>
+	</div>
+</div>
+
+<div id="node-grid-container" class="container-fluid position-absolute">
+	<div id="node-grid" class="row overflow-auto g-0"></div>
 </div>
 
 </main>

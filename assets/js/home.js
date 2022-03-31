@@ -45,7 +45,8 @@ function fillSelect(select, items) {
 }
 
 function fillSelectWithKubernetesList(select, list) {
-	fillSelect(select, list.items.map(item => item.metadata.name));
+	const entries = list.items.map(item => item.metadata.name);
+	fillSelect(select, entries);
 }
 
 class Graph {
