@@ -227,14 +227,6 @@ class App {
 		serviceEntity.getElementsByClassName('entity-container')[0].appendChild(this.nodeGrid);
 	}
 
-	addEventListenerToNamespaceSelect(type, listener, useCapture) {
-		this.namespaceSelect.addEventListener(type, listener, useCapture);
-	}
-
-	addEventListenerToServiceSelect(type, listener, useCapture) {
-		this.serviceSelect.addEventListener(type, listener, useCapture);
-	}
-
 	updateGraph() {
 		const service = this.service;
 		if (!service) {
@@ -427,13 +419,13 @@ window.onload = function() {
 	.then(updateGraph)
 	.catch(showError);
 
-	app.addEventListenerToNamespaceSelect('change', () => {
+	app.namespaceSelect.addEventListener('change', () => {
 		updateServices()
 		.then(updateEndpoints)
 		.then(updateGraph)
 		.catch(showError);
 	});
-	app.addEventListenerToServiceSelect('change', () => {
+	app.serviceSelect.addEventListener('change', () => {
 		updateEndpoints()
 		.then(updateGraph)
 		.catch(showError);
