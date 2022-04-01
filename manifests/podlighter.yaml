@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podlighter
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: podlighter
+  namespace: podlighter
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: podlighter
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "services", "endpoints", "namespaces", "pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: podlighter:podlighter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: podlighter
+subjects:
+  - kind: ServiceAccount
+    name: podlighter
+    namespace: podlighter
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podlighter
+  namespace: podlighter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: podlighter
+  template:
+    metadata:
+      name: podlighter
+      labels:
+        app: podlighter
+    spec:
+      serviceAccountName: podlighter
+      containers:
+        - name: app
+          image: r.deso.tech/podlighter/podlighter:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: podlighter
+  namespace: podlighter
+spec:
+  type: LoadBalancer
+  selector:
+    app: podlighter
+  ports:
+    - port: 80
