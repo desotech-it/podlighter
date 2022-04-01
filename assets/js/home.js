@@ -254,9 +254,12 @@ class App {
 
 		const items = this.#nodeList.items;
 
-		const columnClasses = [ 'col'];
+		const columnClasses = ['col'];
 		if (items.length > 1) {
 			columnClasses.push('col-xl-6');
+			if (items.length > 2) {
+				columnClasses.push('col-xxl-4');
+			}
 		}
 
 		items.forEach(node => {
