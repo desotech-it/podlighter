@@ -24,14 +24,14 @@ async function fetchJSON(url) {
 	});
 }
 
-function clearSelect(select) {
+function clearChildren(select) {
 	const range = document.createRange();
 	range.selectNodeContents(select);
 	range.deleteContents();
 }
 
 function fillSelect(select, items) {
-	clearSelect(select);
+	clearChildren(select);
 	if (items.length > 0) {
 		items.forEach(element => {
 			const option = document.createElement('option');
@@ -250,7 +250,7 @@ class App {
 
 		this.#graphs.clear();
 
-		clearSelect(this.nodeGrid);
+		clearChildren(this.nodeGrid);
 
 		const items = this.#nodeList.items;
 
