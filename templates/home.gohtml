@@ -3,38 +3,13 @@
 {{end}}
 
 {{define "body"}}
-<header class="container-fluid py-3 mb-3 border-bottom">
-	<form class="row">
-		<div class="col">
-			<!-- <label for="namespace-select">Namespace</label> -->
-			<!-- <select id="namespace-select" class="form-select" aria-label="Namespace" disabled> -->
-			<!-- </select> -->
-		</div>
-		<div class="col">
-			<label for="service-select">Service</label>
-			<select id="service-select" class="form-select" aria-label="Service" disabled>
-			</select>
-		</div>
-	</form>
-</header>
-
-<main id="main" class="flex-fill d-flex flex-column position-relative">
-
-<div id="alert-placeholder" class="container-fluid position-absolute top-0 start-0"></div>
-
-<div id="namespace-logo-container" class="position-absolute top-0 start-0">
+<main id="main" class="flex-fill d-flex flex-column">
 	<div class="position-relative">
-		<img id="namespace-logo" src="/assets/icons/kubernetes/svg/labeled/ns.svg" class="h-auto w-100"/>
-		<select id="namespace-select" class="kubernetes-select form-select d-inline w-auto position-absolute top-50 translate-middle-y" aria-label="Namespace" disabled></select>
+		<div class="row g-0 justify-content-center position-absolute w-100">
+			<div id="alert-placeholder" class="col-auto"></div>
+		</div>
 	</div>
-</div>
-
-<div id="node-grid-container" class="container-fluid position-absolute">
-	<div id="node-grid" class="row overflow-auto g-0"></div>
-</div>
-
 </main>
-
 {{end}}
 
 {{define "scripts"}}

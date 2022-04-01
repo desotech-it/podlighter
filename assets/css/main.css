@@ -1,52 +1,63 @@
 :root {
 	--kubernetes-blue: #326ce5;
+	--logo-size: 64px;
+	--wrapper-padding: calc(var(--logo-size) / 2);
+	--container-padding-top: calc(var(--logo-size) / 3);
+	--badge-translate-y: calc(-50% - var(--container-padding-top));
 }
 
 #alert-placeholder {
 	z-index: 3;
 }
 
-#node-grid-container {
-	top: 32px;
-	left: 32px;
-	/* padding: 32px; */
-	/* margin-left: 32px; */
-	/* margin-right: 32px; */
-	border: 4px solid var(--kubernetes-blue);
-	border-radius: 8px;
-	padding: 32px;
-	width: calc(100% - 32px - 32px);
-	z-index: 1;
+.entity-wrapper {
+	padding: var(--wrapper-padding);
 }
 
-#namespace-logo-container {
-	width: 64px;
+.entity-container {
+	position: relative;
+	border: 4px solid var(--kubernetes-blue);
+	border-radius: 8px;
+	padding-top: var(--container-padding-top);
+}
+
+.kubernetes-badge-wrapper {
+	position: absolute;
+	height: var(--logo-size);
+	width: auto;
+}
+
+.kubernetes-badge-logo {
+	height: 100%;
+	left: 0;
+	position: absolute;
+	top: 0;
+	transform: translate(-50%, var(--badge-translate-y));
+	width: auto;
 	z-index: 2;
 }
 
-.node-badge {
-	top: 8px;
-	left: 8px;
+.kubernetes-select {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+	cursor: pointer;
+}
+
+.kubernetes-label {
+	background-image: none;
+}
+
+.kubernetes-badge {
+	background-color: var(--kubernetes-blue);
+	border-color: white;
+	color: white;
+	transform: translateY(var(--badge-translate-y));
+	width: auto;
+	position: absolute;
+	padding-left: 48px;
 	z-index: 1;
+	white-space: nowrap;
 }
 
 .graph-container {
 	height: 540px;
-}
-
-#namespace-logo {
-	z-index: 1;
-}
-
-#namespace-select {
-	padding-left: 20px;
-	margin-left: -10px;
-	z-index: -1;
-}
-
-.kubernetes-select {
-	background-color: var(--kubernetes-blue);
-	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-	border-color: white;
-	color: white;
 }

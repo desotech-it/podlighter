@@ -168,30 +168,71 @@ class Graph {
 	}
 }
 
+function makeSelect(selectId) {
+	const select = document.createElement('select');
+	select.setAttribute('id', selectId);
+	select.classList.add('kubernetes-badge', 'kubernetes-select','form-select');
+	return select;
+}
+
+function makeLabel(text) {
+	const label = document.createElement('span');
+	label.classList.add('kubernetes-badge', 'kubernetes-label', 'form-select');
+	const textNode = document.createTextNode(text);
+	label.appendChild(textNode);
+	return label;
+}
+
+function makeEntity(logoPath, elementNextToLogo) {
+	const wrapper = document.createElement('div');
+	wrapper.classList.add('entity-wrapper');
+	const container = document.createElement('div');
+	container.classList.add('entity-container');
+	const selectWrapper = document.createElement('div');
+	selectWrapper.classList.add('kubernetes-badge-wrapper');
+	const img = document.createElement('img');
+	img.setAttribute('src', logoPath);
+	img.classList.add('kubernetes-badge-logo');
+	selectWrapper.appendChild(img);
+	selectWrapper.appendChild(elementNextToLogo);
+	container.appendChild(selectWrapper);
+	wrapper.appendChild(container);
+	return wrapper;
+}
+
+function makeNodeGrid() {
+	const grid = document.createElement('div');
+	grid.setAttribute('id', 'node-grid');
+	grid.classList.add('row', 'g-0');
+	return grid;
+}
+
 class App {
-	#namespaceSelect;
-	#serviceSelect;
 	#alertPlaceholder;
-	#nodeGrid;
 	#namespaceList;
 	#serviceList;
 	#nodeList;
 	#graphs;
 
-	constructor(namespaceSelect, serviceSelect, alertPlaceholder, nodeGrid) {
-		this.#namespaceSelect = namespaceSelect;
-		this.#serviceSelect = serviceSelect;
+	constructor(main, alertPlaceholder) {
 		this.#alertPlaceholder = alertPlaceholder;
-		this.#nodeGrid = nodeGrid;
 		this.#graphs = new Map();
+		this.namespaceSelect = makeSelect('namespace-select');
+		const namespaceEntity = makeEntity('/assets/icons/kubernetes/svg/labeled/ns.svg', this.namespaceSelect);
+		main.appendChild(namespaceEntity);
+		this.serviceSelect = makeSelect('service-select');
+		const serviceEntity = makeEntity('/assets/icons/kubernetes/svg/labeled/svc.svg', this.serviceSelect);
+		namespaceEntity.getElementsByClassName('entity-container')[0].appendChild(serviceEntity);
+		this.nodeGrid = makeNodeGrid();
+		serviceEntity.getElementsByClassName('entity-container')[0].appendChild(this.nodeGrid);
 	}
 
 	addEventListenerToNamespaceSelect(type, listener, useCapture) {
-		this.#namespaceSelect.addEventListener(type, listener, useCapture);
+		this.namespaceSelect.addEventListener(type, listener, useCapture);
 	}
 
 	addEventListenerToServiceSelect(type, listener, useCapture) {
-		this.#serviceSelect.addEventListener(type, listener, useCapture);
+		this.serviceSelect.addEventListener(type, listener, useCapture);
 	}
 
 	updateGraph() {
@@ -209,31 +250,28 @@ class App {
 
 		this.#graphs.clear();
 
-		clearSelect(this.#nodeGrid);
+		clearSelect(this.nodeGrid);
 
 		const items = this.#nodeList.items;
 
-		const columnClasses = ['border', 'border-2', 'border-secondary', 'position-relative', 'col'];
+		const columnClasses = [ 'col'];
 		if (items.length > 1) {
 			columnClasses.push('col-xl-6');
 		}
 
 		items.forEach(node => {
+			const nodeName = node.metadata.name;
 			const col = document.createElement('div');
 			col.classList.add(...columnClasses);
-			const badge = document.createElement('h5');
-			badge.innerHTML = `
-				<span class="badge bg-secondary rounded-pill position-absolute node-badge">
-					${node.metadata.name}
-				</span>`;
 			const graphContainer = document.createElement('div');
-			graphContainer.setAttribute('id', 'graph-' + node.metadata.name);
+			graphContainer.setAttribute('id', 'graph-' + nodeName);
 			graphContainer.classList.add('graph-container');
-			col.appendChild(badge);
-			col.appendChild(graphContainer);
-			this.#nodeGrid.appendChild(col);
+			const nodeEntity = makeEntity('/assets/icons/kubernetes/svg/labeled/node.svg', makeLabel(nodeName));
+			nodeEntity.getElementsByClassName('entity-container')[0].appendChild(graphContainer);
+			col.appendChild(nodeEntity);
+			this.nodeGrid.appendChild(col);
 			const graph = new Graph(graphContainer, service);
-			this.#graphs.set(node.metadata.name, graph);
+			this.#graphs.set(nodeName, graph);
 		});
 
 		endpoints.subsets.forEach(subset => {
@@ -271,11 +309,11 @@ class App {
 	}
 
 	get namespace() {
-		return this.#namespaceList.items[this.#namespaceSelect.selectedIndex];
+		return this.#namespaceList.items[this.namespaceSelect.selectedIndex];
 	}
 
 	get service() {
-		return this.#serviceList.items[this.#serviceSelect.selectedIndex];
+		return this.#serviceList.items[this.serviceSelect.selectedIndex];
 	}
 
 	get namespaces() {
@@ -292,12 +330,12 @@ class App {
 
 	set namespaces(namespaces) {
 		this.#namespaceList = namespaces;
-		fillSelectWithKubernetesList(this.#namespaceSelect, namespaces);
+		fillSelectWithKubernetesList(this.namespaceSelect, namespaces);
 	}
 
 	set services(services) {
 		this.#serviceList = services;
-		fillSelectWithKubernetesList(this.#serviceSelect, services);
+		fillSelectWithKubernetesList(this.serviceSelect, services);
 	}
 
 	set nodes(nodes) {
@@ -326,12 +364,10 @@ async function fetchNodes() {
 }
 
 window.onload = function() {
-	const ns = document.getElementById('namespace-select');
-	const svc = document.getElementById('service-select');
-	const err = document.getElementById('alert-placeholder');
-	const ng = document.getElementById('node-grid');
+	const main = document.getElementById('main');
+	const alertPlaceholder = document.getElementById('alert-placeholder');
 
-	const app = new App(ns, svc, err, ng);
+	const app = new App(main, alertPlaceholder);
 
 	const emptyCheckbox = new PodlighterError(null);
 
