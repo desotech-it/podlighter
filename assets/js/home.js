@@ -148,7 +148,7 @@ class Graph {
 				id: address.ip
 			},
 			scratch: {
-				_label: ports.map(item => `${address.ip}:${item.port}/${item.protocol}`).join(',')
+				_label: address.ip + ':' + ports.map(item => `${item.port}/${item.protocol}`).join(',')
 			},
 			classes: [
 				'endpoint',
