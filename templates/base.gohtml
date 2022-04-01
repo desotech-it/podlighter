@@ -10,9 +10,10 @@
 	<body class="min-vh-100 d-flex flex-column">
 		{{template "body" .}}
 		<footer class="footer py-3 border-top">
-			<p class="text-center text-muted">&copy; 2022 Desotech</p>
+			<p class="text-center text-muted">&copy; <span id="footer-year"></span> Desotech</p>
 		</footer>
 		<script src="/static/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="/assets/js/base.js"></script>
 		{{template "scripts"}}
 	</body>
 </html>
